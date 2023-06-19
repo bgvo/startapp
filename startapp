@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Get arguments and insert it into rails new command 
+# $1 = app name
+# $2 = database
+# $3 = css engine
+
+# startapp with flag --help or -h it should print the different options
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+  echo "Usage: startapp [app_name] [database] [css_engine]"
+  echo "Example: startapp myapp postgresql tailwind"
+  exit 0
+fi
+
+# Give defaults if arguments are not given
+if [ -z "$1" ]; then
+  echo "No app name given, using default name 'myapp'"
+  echo "Usage: startapp [app_name] [database] [css_engine]"
+  echo "Example: startapp myapp postgresql tailwind"
+  echo "Run 'startapp --help' for more options"
+  echo "Creating new Rails app with name myapp, database postgresql and css engine tailwind"
+
+  rails new myapp -d postgresql -m https://raw.githubusercontent.com/bgvo/rails7-template/main/template.rb -c tailwind
+else
+  echo "Creating new Rails app with name $1, database $2 and css engine $3"
+
+  rails new $1 -d $2 -m https://raw.githubusercontent.com/bgvo/rails7-template/main/template.rb -c $3 
+fi
+
+  rails db:create
+  rails g noticed:model
+  rails db:migrate
+  rails generate administrate:install
+
+  echo "Run 'bin/dev' to start the server."

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-rails db:create
-rails g noticed:model
-rails db:migrate
-rails generate administrate:install
-
-echo "Run 'bin/dev' to start the server."
