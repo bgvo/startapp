@@ -1,35 +1,94 @@
 #!/bin/bash
 
-# Get arguments and insert it into rails new command 
-# $1 = app name
-# $2 = database
-# $3 = css engine
-
-# startapp with flag --help or -h it should print the different options
-if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+# Function to print help message
+print_help() {
   echo "Usage: startapp [app_name] [database] [css_engine]"
   echo "Example: startapp myapp postgresql tailwind"
   exit 0
+}
+
+# Check if the first argument is a flag
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+  print_help
 fi
 
-# Give defaults if arguments are not given
-if [ -z "$1" ]; then
+# Set default values
+app_name="myapp"
+database="postgresql"
+css_engine="tailwind"
+
+# Parse arguments using flags
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -d|--database)
+      database="$2"
+      shift 2
+      ;;
+    -c|--css)
+      css_engine="$2"
+      shift 2
+      ;;
+    *)
+      app_name="$1"
+      shift
+      ;;
+  esac
+done
+
+# Check if the app name is empty
+if [[ -z "$app_name" ]]; then
   echo "No app name given, using default name 'myapp'"
-  echo "Usage: startapp [app_name] [database] [css_engine]"
-  echo "Example: startapp myapp postgresql tailwind"
-  echo "Run 'startapp --help' for more options"
-  echo "Creating new Rails app with name myapp, database postgresql and css engine tailwind"
-
-  rails new myapp -d postgresql -m https://raw.githubusercontent.com/bgvo/rails7-template/main/template.rb -c tailwind
-else
-  echo "Creating new Rails app with name $1, database $2 and css engine $3"
-
-  rails new $1 -d $2 -m https://raw.githubusercontent.com/bgvo/rails7-template/main/template.rb -c $3 
 fi
 
-  rails db:create
-  rails g noticed:model
-  rails db:migrate
-  rails generate administrate:install
+# Check if the database is empty
+if [[ -z "$database" ]]; then
+  echo "No database specified"
+fi
 
-  echo "Run 'bin/dev' to start the server."
+# Check if the CSS engine is empty
+if [[ -z "$css_engine" ]]; then
+  echo "No CSS engine specified"
+fi
+
+# Print defaults and ask for confirmation
+echo "Default values:"
+echo "App Name: $app_name"
+echo "Database: $database"
+echo "CSS Engine: $css_engine"
+read -rp "Proceed with these values? (Y/n): " confirm
+
+# Convert user input to lowercase for easier comparison using 'tr'
+confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
+echo $confirm
+
+if [[ $confirm =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
+  echo "Creating new Rails app with name $app_name, database $database and css engine $css_engine"
+else
+  echo "Aborted."
+  exit 0
+fi
+
+rails new "$app_name" -d "$database" -m https://raw.githubusercontent.com/bgvo/rails7-template/main/template.rb -c "$css_engine"
+
+cd "$app_name"
+
+rake db:create
+rails g noticed:model
+rake db:migrate
+rails generate administrate:install
+
+chmod +x bin/dev
+
+# Initialize Git repository
+git init
+
+# Add all files to the staging area
+git add .
+
+# Commit the changes with a descriptive message
+git commit -m "Initial commit"
+
+echo "App successfully created!"
+echo "To get started with your new app:"
+echo "  cd $app_name"
+echo "  bin/dev"
